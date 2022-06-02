@@ -4,7 +4,7 @@ from Experiment import *
 
 WIDTH = 500
 HEIGHT = 600
-scale = 100 # 1 cm = 100 px
+scale = 50 # 1 cm = 100 px
 
 window = Tk()
 window.title("Simulador de viscosidade")
@@ -31,9 +31,9 @@ while True:
 		canvas,
 		(WIDTH, HEIGHT),
 		scale, 
-		2, # liquid width / cm
-		5, # liquid height / cm
-		(7850, 1400, 4.5) # ball density, fluid density, fluid viscosity (SI)
+		4, # liquid width / cm
+		10, # liquid height / cm
+		(7850, 1400, 2.8) # ball density, fluid density, fluid viscosity (SI)
 	)
 
 	# User input (parameters)
