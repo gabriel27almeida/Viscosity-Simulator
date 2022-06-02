@@ -14,28 +14,30 @@ class Fluid:
 
 
 class Experiment:
-	def __init__(self, window, canvas, size, scale, parameters):
+	def __init__(self, window, canvas, size, scale, fluid_width, fluid_height,parameters):
 		self.window = window
 		self.canvas = canvas
 		self.size = size
 		self.scale = scale
-		self.fluid = Fluid(canvas, size, 10*scale, 25*scale) # fluid 10 cm x 25 cm
+		self.fluid = Fluid(canvas, size, fluid_width*scale, fluid_height*scale)
 
 		# scale legend
-		canvas.create_line(size[0]/10, size[1]/10, size[0]/10, size[1]/10 +2* scale, arrow = BOTH)
-		canvas.create_text(size[0]/10, size[1]/10 + scale, text=" 2 cm", anchor = W)
+		canvas.create_line(size[0]/10, size[1]/10, size[0]/10, size[1]/10 + scale, arrow = BOTH)
+		canvas.create_text(size[0]/10, size[1]/10 + scale/2, text=" 1 cm", anchor = W)
 
 		self.ball_density = parameters[0]
 		self.fluid_density = parameters[1]
 		self.viscosity = parameters[2]
 		
 	def AddMarker(self,h):
+		# Horizontal marker
 		self.canvas.create_line(
 			  self.size[0]/10, self.size[1] - h*self.scale, 
 			9*self.size[0]/10, self.size[1] - h*self.scale
 		)
 
 	def AddBall(self, radius):
+		# canvas size
 		w = self.size[0]
 		h = self.size[1]
 		
@@ -47,17 +49,33 @@ class Experiment:
 		self.radius = radius
 		self.mass = 4*pi/3*(radius/100)**3 * self.ball_density
 		self.velocity = 0
+		self.distance = 0 # to store distance travelled in each frame
 
-	def Run(self, dt):
-		#time.sleep(2)
+	def Run(self, dt, FPS):
+		steps_per_frame = int(1./FPS/dt)
+
+		i = 0
+		start_time = time.time()
 		while True:
-			self.canvas.move(self.ball, 0, self.velocity)
-			dv = dt* 9.81*(1- self.fluid_density/self.ball_density) * self.scale 
-			dv -= dt* 6*pi*self.viscosity* self.radius/100. * (self.velocity/self.scale) /self.mass * self.scale 
+			# Euler solver
+			a = 9.81*(1 - self.fluid_density/self.ball_density)
+			a -= 6*pi*self.viscosity* self.radius/100. * self.velocity /self.mass
+			
+			dv = a * dt
 			
 			self.velocity += dv
+			self.distance += self.velocity * dt
 
-			self.window.update()
-			time.sleep(dt)
+			# Make new frame
+			if (i % (steps_per_frame) == 0):
+				# Sleep if early
+				time.sleep(max(start_time + (i+1) * dt - time.time(), 0))
+				self.canvas.move(self.ball, 0, self.distance * 100 * self.scale)
+				self.window.update()
+				self.distance = 0
+
+			# if bottom reached
 			if self.canvas.coords(self.ball)[3] >= self.size[1]:
 				break
+
+			i += 1
